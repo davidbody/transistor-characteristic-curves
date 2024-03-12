@@ -40,5 +40,5 @@ t_df |>
        subtitle = "2N3904",
        x = expression(paste(V[CE], " (V)")),
        y = expression(paste(I[C], " (mA)")),
-       color = expression(paste(I[B], "(μA)"))) +
+       color = expression(paste(I[B], " (μA)"))) +
   theme_minimal()
