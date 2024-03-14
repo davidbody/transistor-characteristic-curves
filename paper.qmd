@@ -1,7 +1,8 @@
 ---
-title: "Transistor Characteristic Curves"
+title: "Measuring Transistor Characteristic Curves"
 author: David W. Body
-date: 2024-03-10
+date: 2024-03-14
+date-format: long
 format: 
   pdf:
     include-in-header:
@@ -9,22 +10,27 @@ format:
           \usepackage{circuitikz}
           \usepackage{siunitx}
     latex-auto-install: false
+knitr:
+  opts_chunk: 
+    dev: cairo_pdf
 editor: source
+bibliography: references.bib
 ---
 
-This note documents how to measure transistor characteristic curves using an oscilloscope.
+This note documents how to measure transistor characteristic curves using an oscilloscope as described in [@debuyl2010]. The circuit is also based on Lab 33 in [@buchla2010].
 
 The collector-emitter characteristic curves for a bipolar junction transistor show how collector current, $I_C$, varies with the collector-emitter voltage, $V_{CE}$, for various specified values of base current, $I_B$.
 
-In this case, we use a 2N3904 NPN bipolor junction transistor.
+In this case, we use a 2N3904 NPN bipolar junction transistor.
 
 We can measure transistor characteristics using the following circuit
 
 ```{=tex}
+\begin{center}
 \begin{circuitikz}[american]
 \draw (0,1) [battery, v=$V_1$] to (0,0) node[ground]{};
 \draw (0,1) |- (0,2) to [R, l^=$R_B$, a_=\SI{33}{k\ohm}] (2,2);
-\draw (3,2) node[npn](npn1) {Q1}
+\draw (3,2) node[npn](npn1) {2N3904}
   (npn1.base) node[anchor=east] {}
   (npn1.collector) node[anchor=south] {}
   (npn1.emitter) node[anchor=north] {}
@@ -33,8 +39,8 @@ We can measure transistor characteristics using the following circuit
 \draw (npn1.emitter) to (3,0) node[ground]{};
 \draw (npn1.collector) to [R, l=$R_C$, a=\SI{100}{\ohm}] (3,5) |- (5,5) to [sV=$V_2$] (5,3) to (5,2) node[ground]{};
 \end{circuitikz}
+\end{center}
 ```
-
 where $V_1$ is a DC voltage source that can be set to various voltages that will determine the base current, $I_B$. In this circuit,
 
 $$
@@ -52,24 +58,24 @@ $$
 We connect the oscilloscope channel 1 at the top of $R_C$, and channel 2 at the collector. This lets us measure
 
 $$
-V_2 = CH1.V
-$$
-and
+V_2 = V_{CH1}
+$$ and
 
 $$
-I_C = \frac{CH1.V - CH2.V}{R_C} = \frac{CH1.V - CH2.V}{100 \Omega}
-$$
+I_C = \frac{V_{CH1} - V_{CH2}}{R_C} = \frac{V_{CH1} - V_{CH2}}{100 \Omega}
+$$ where $V_{CH1}$ and $V_{CH2}$ are the measured channel 1 and channel 2 voltages, respectively.
+
 Each cycle of the sawtooth waveform $V_2$ traces out a characteristic curve.
 
 We set the DC voltage source $V_1$ to the following voltages:
 
-$0.5V$, $1.0V$, $1.5V$, $2.0V$, $2.5V$, $3.0V$, $3.5V$, $4.0V$, $4.5V$, $5.0V$.
+> $0.5V$, $1.0V$, $1.5V$, $2.0V$, $2.5V$, $3.0V$, $3.5V$, $4.0V$, $4.5V$, $5.0V$
 
 For each of these, we capture the output of the oscilloscope as a CSV file.
 
-Here is a representative set of waveforms from the oscilloscope for $V_1 = 2.5V$.
+Here is a representative set of waveforms from the oscilloscope for $V_1$ = $2.5V$.
 
-![Waveforms when VI = 2.5 V](RigolDS%202.5V0.png)
+![](RigolDS%202.5V0.png){height="40%"}
 
 We then use R to read the oscilloscope data, from which we can compute and plot the characteristic curves.
 
@@ -114,13 +120,15 @@ t_df <- rbind(V1_05, V1_10, V1_15, V1_20, V1_25,
               V1_30, V1_35, V1_40, V1_45, V1_50)
 ```
 
+{{< pagebreak >}}
+
 Finally, we compute $I_B$, $I_C$, and $V_{CE}$, and plot the curves.
 
 ```{r echo=TRUE, warning=FALSE}
 t_df |>
   mutate(IB = as.factor(round((V1 / 33000)*1e6)),
          IC = ((CH1V - CH2V)/100)*1000, VCE = CH2V) |>
-  ggplot(aes(VCE, IC, color = IB)) +
+  ggplot(aes(VCE, IC, color = fct_reorder2(IB, VCE, IC))) +
   geom_line() +
   labs(title = "Transistor characteristic curves",
        subtitle = "2N3904",
@@ -129,3 +137,9 @@ t_df |>
        color = expression(paste(I[B], " (μA)"))) +
   theme_minimal()
 ```
+
+---
+## References
+
+::: refs
+:::
