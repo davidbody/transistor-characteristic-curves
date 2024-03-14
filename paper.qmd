@@ -14,7 +14,11 @@ editor: source
 
 This note documents how to measure transistor characteristic curves using an oscilloscope.
 
-First construct the following circuit:
+The collector-emitter characteristic curves for a bipolar junction transistor show how collector current, $I_C$, varies with the collector-emitter voltage, $V_{CE}$, for various specified values of base current, $I_B$.
+
+In this case, we use a 2N3904 NPN bipolor junction transistor.
+
+We can measure transistor characteristics using the following circuit
 
 ```{=tex}
 \begin{circuitikz}[american]
@@ -30,11 +34,46 @@ First construct the following circuit:
 \draw (npn1.collector) to [R, l=$R_C$, a=\SI{100}{\ohm}] (3,5) |- (5,5) to [sV=$V_2$] (5,3) to (5,2) node[ground]{};
 \end{circuitikz}
 ```
-Here is a representative set of waveforms from the oscilloscope.
+
+where $V_1$ is a DC voltage source that can be set to various voltages that will determine the base current, $I_B$. In this circuit,
+
+$$
+I_B \approx \frac{V_1}{R_B} = \frac{V_1}{33 k\Omega}
+$$
+
+For a given voltage, $V_1$, we can trace out a characteristic curve by setting $V_2$ to a sawtooth waveform with a frequency of 100 Hz and voltage of 0V to 10V.
+
+The characteristic curve is $I_C$ as a function of $V_{CE}$. In this circuit
+
+$$
+I_C = \frac{V_2 - V_{CE}}{R_C}
+$$
+
+We connect the oscilloscope channel 1 at the top of $R_C$, and channel 2 at the collector. This lets us measure
+
+$$
+V_2 = CH1.V
+$$
+and
+
+$$
+I_C = \frac{CH1.V - CH2.V}{R_C} = \frac{CH1.V - CH2.V}{100 \Omega}
+$$
+Each cycle of the sawtooth waveform $V_2$ traces out a characteristic curve.
+
+We set the DC voltage source $V_1$ to the following voltages:
+
+$0.5V$, $1.0V$, $1.5V$, $2.0V$, $2.5V$, $3.0V$, $3.5V$, $4.0V$, $4.5V$, $5.0V$.
+
+For each of these, we capture the output of the oscilloscope as a CSV file.
+
+Here is a representative set of waveforms from the oscilloscope for $V_1 = 2.5V$.
 
 ![Waveforms when VI = 2.5 V](RigolDS%202.5V0.png)
 
-Here is the code we use to produce the transistor characteristic curves:
+We then use R to read the oscilloscope data, from which we can compute and plot the characteristic curves.
+
+This is the code to read and combine the CSV files.
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -74,6 +113,8 @@ V1_50$V1 <- 5.0
 t_df <- rbind(V1_05, V1_10, V1_15, V1_20, V1_25,
               V1_30, V1_35, V1_40, V1_45, V1_50)
 ```
+
+Finally, we compute $I_B$, $I_C$, and $V_{CE}$, and plot the curves.
 
 ```{r echo=TRUE, warning=FALSE}
 t_df |>
